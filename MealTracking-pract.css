@@ -1,0 +1,83 @@
+body{
+    background-color: black;
+    color: aliceblue;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+.app-container{
+    background-color: rgb(44, 43, 43);
+    padding: 30px;
+    border:2px solid lightblue;
+    border-radius: 15px;
+    width: 50vw;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+label{
+    display: block;
+    margin: 5px;
+}
+input[type="text"],
+input[type="number"]{
+    margin: 5px;
+    width: 250px;
+    height: 35px;
+    border-radius: 6px;
+}
+#meal-form{
+    background-color: rgb(35, 34, 32);
+    padding: 20px;
+    border: 2px solid lightblue;
+    box-shadow: 0 0 10px gray;
+    max-width: 100%;
+    justify-content: center;
+    align-items: center;
+    
+}
+button{
+    display: block;
+    width: 80%;
+    padding: 10px;
+    margin: 10px;
+    background-color: rgb(77, 77, 240);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover{
+    background-color: blue;
+}
+.food-item{
+    display: flex;
+    justify-content: space-between;
+}
+.food-item label,
+.food-item input{
+    width: 45%;
+}
+.meal-tracking-output{
+    height: fit-content;
+    width: auto;
+    width: fit-content;
+    border: 2px solid whitesmoke;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+
+}
+#meal-list{
+    border: 2px solid white;
+    background-color: rgb(18, 41, 33);
+    color: lightgreen;
+}
+.expand-meal{
+    width: fit-content;
+}
+#meal-list>li{
+    transition: all 3s ease-in-out 1s;
+
+}
