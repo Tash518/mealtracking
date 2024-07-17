@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const apiKey = 'C7Oa4TY1wUXVNkR4q65DuQ==gRK9uz0gDqdhAq19';
+    const apiKey = 'apikey';
     const url = 'https://api.calorieninjas.com/v1/nutrition';
 
     const mealForm = document.getElementById('meal-form');
