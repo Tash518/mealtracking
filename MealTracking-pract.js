@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const apiKey = 'C7Oa4TY1wUXVNkR4q65DuQ==gRK9uz0gDqdhAq19';
+    const apiKey = 'apikey';
     const url = 'https://api.calorieninjas.com/v1/nutrition';
 
     const mealForm = document.getElementById('meal-form');
@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const fetchFoodInfo = async (foodQuery) => {
+        if (!foodQuery.trim()) {
+            return []; // Return empty array if the query is empty
+        }
         try {
             const response = await fetch(`${url}?query=${foodQuery}`, {
                 method: 'GET',
@@ -189,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'bar',
             data: data,
             options: {
-                responsive: true,
                 scales: {
                     y: {
                         beginAtZero: true
@@ -201,6 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showInfoButton.addEventListener('click', async () => {
         const foodQuery = document.getElementById('meal-info').value;
+        if (!foodQuery.trim()) {
+            foodInfoDiv.innerHTML = 'Please enter a food item.';
+            foodInfoDiv.style.display = 'block';
+            return; // Exit if the query is empty
+        }
+
         const foodItems = await fetchFoodInfo(foodQuery);
 
         if (foodItems.length > 0) {
@@ -234,15 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (detailedInfoDiv.style.display === 'none') {
                         detailedInfoDiv.style.display = 'block';
                         showMoreInfoButton.textContent = 'Hide Info';
-                        renderChart(food); // Render chart with food information
-                    } else {
-                        detailedInfoDiv.style.display = 'none';
-                        showMoreInfoButton.textContent = 'Show More Info';
                         foodChartDiv.style.display = 'none'; // Hide chart
                         if (chartInstance) {
                             chartInstance.destroy(); // Destroy previous chart instance
                             chartInstance = null;
                         }
+                    } else {
+                        detailedInfoDiv.style.display = 'none';
+                        showMoreInfoButton.textContent = 'Show More Info';
                     }
                 });
             });
@@ -250,6 +257,45 @@ document.addEventListener('DOMContentLoaded', () => {
             foodInfoDiv.style.display = 'none';
             foodInfoDiv.innerHTML = 'No information available for this food item.';
         }
+    });
+
+    mealForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const mealName = document.getElementById('meal-name').value;
+        const foodQuery = document.getElementById('meal-info').value;
+
+        if (!foodQuery.trim()) {
+            alert('Please enter a food item.');
+            return; // Exit if the query is empty
+        }
+
+        const foodItems = await fetchFoodInfo(foodQuery);
+        const foods = foodItems.map(item => ({
+            name: item.name,
+            calories: roundToDecimal(item.calories),
+            fat_total_g: roundToDecimal(item.fat_total_g),
+            fat_saturated_g: roundToDecimal(item.fat_saturated_g),
+            protein_g: roundToDecimal(item.protein_g),
+            carbohydrates_total_g: roundToDecimal(item.carbohydrates_total_g),
+            sugar_g: roundToDecimal(item.sugar_g),
+            fiber_g: roundToDecimal(item.fiber_g),
+            sodium_mg: roundToDecimal(item.sodium_mg),
+            potassium_mg: roundToDecimal(item.potassium_mg),
+            cholesterol_mg: roundToDecimal(item.cholesterol_mg)
+        }));
+
+        const meal = {
+            name: mealName,
+            foods: foods,
+            calories: foods.reduce((totalCal, food) => totalCal + food.calories, 0),
+            timestamp: new Date().toISOString()
+        };
+
+        const index = saveMeal(meal);
+        addMealToDom(meal, index);
+        updateTotalCalories();
+        mealForm.reset();
     });
 
     mealDateInput.addEventListener('input', (event) => {
