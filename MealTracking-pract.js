@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const apiKey = 'apikey';
+    const apiKey = 'C7Oa4TY1wUXVNkR4q65DuQ==gRK9uz0gDqdhAq19';
     const url = 'https://api.calorieninjas.com/v1/nutrition';
 
     const mealForm = document.getElementById('meal-form');
@@ -12,25 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentFoodInfo = {};
 
+    const roundToDecimal = (value, decimals = 1) => {
+        return Math.round(value * 10 ** decimals) / 10 ** decimals;
+    };
+
     const updateTotalCalories = () => {
         let totalCalories = 0;
         const meals = JSON.parse(localStorage.getItem('meals')) || [];
         meals.forEach(meal => {
-            totalCalories += meal.calories;
+            totalCalories += roundToDecimal(meal.calories);
         });
-        totalCaloriesElement.textContent = totalCalories;
+        totalCaloriesElement.textContent = roundToDecimal(totalCalories);
     };
 
     const addMealToDom = (meal, index) => {
         const mealItem = document.createElement('li');
         mealItem.innerHTML = `
-            ${meal.name} - ${meal.calories} calories :: time- ${new Date(meal.timestamp).toLocaleTimeString()} 
+            ${meal.name} - ${roundToDecimal(meal.calories)} calories :: time- ${new Date(meal.timestamp).toLocaleTimeString()} 
             <button class="expand-meal">Expand</button>
+            <button class="remove-meal" data-index="${index}">X</button>
             <ul class="food-list" style="display: none;"></ul>
         `;
         mealList.appendChild(mealItem);
 
         const expandButton = mealItem.querySelector('.expand-meal');
+        const removeButton = mealItem.querySelector('.remove-meal');
         const foodList = mealItem.querySelector('.food-list');
 
         expandButton.addEventListener('click', () => {
@@ -40,18 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 meal.foods.forEach(food => {
                     const foodItem = document.createElement('li');
                     foodItem.innerHTML = `
-                        ${food.name} - ${food.calories} calories
+                        ${food.name} - ${roundToDecimal(food.calories)} calories
                         <button class="show-info">Show Info</button>
                         <div class="food-info" style="display: none;">
-                            <strong>Total Fat:</strong> ${food.fat_total_g} g<br>
-                            <strong>Saturated Fat:</strong> ${food.fat_saturated_g} g<br>
-                            <strong>Protein:</strong> ${food.protein_g} g<br>
-                            <strong>Carbohydrates:</strong> ${food.carbohydrates_total_g} g<br>
-                            <strong>Sugar:</strong> ${food.sugar_g} g<br>
-                            <strong>Fiber:</strong> ${food.fiber_g} g<br>
-                            <strong>Sodium:</strong> ${food.sodium_mg} mg<br>
-                            <strong>Potassium:</strong> ${food.potassium_mg} mg<br>
-                            <strong>Cholesterol:</strong> ${food.cholesterol_mg} mg<br>
+                            <strong>Total Fat:</strong> ${roundToDecimal(food.fat_total_g)} g<br>
+                            <strong>Saturated Fat:</strong> ${roundToDecimal(food.fat_saturated_g)} g<br>
+                            <strong>Protein:</strong> ${roundToDecimal(food.protein_g)} g<br>
+                            <strong>Carbohydrates:</strong> ${roundToDecimal(food.carbohydrates_total_g)} g<br>
+                            <strong>Sugar:</strong> ${roundToDecimal(food.sugar_g)} g<br>
+                            <strong>Fiber:</strong> ${roundToDecimal(food.fiber_g)} g<br>
+                            <strong>Sodium:</strong> ${roundToDecimal(food.sodium_mg)} mg<br>
+                            <strong>Potassium:</strong> ${roundToDecimal(food.potassium_mg)} mg<br>
+                            <strong>Cholesterol:</strong> ${roundToDecimal(food.cholesterol_mg)} mg<br>
                         </div>
                     `;
                     foodList.appendChild(foodItem);
@@ -59,17 +65,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     const showInfoButton = foodItem.querySelector('.show-info');
                     const foodInfo = foodItem.querySelector('.food-info');
                     showInfoButton.addEventListener('click', () => {
-                        if (foodInfo.style.display === 'none') {
-                            foodInfo.style.display = 'block';
-                        } else {
-                            foodInfo.style.display = 'none';
-                        }
+                        foodInfo.style.display = foodInfo.style.display === 'none' ? 'block' : 'none';
+                        showInfoButton.textContent = foodInfo.style.display === 'none' ? 'Show Info' : 'Hide Info';
                     });
                 });
             } else {
                 foodList.style.display = 'none';
             }
         });
+
+        removeButton.addEventListener('click', () => {
+            removeMeal(index);
+        });
+    };
+
+    const removeMeal = (index) => {
+        let meals = JSON.parse(localStorage.getItem('meals')) || [];
+        meals = meals.filter((_, i) => i !== index);
+        localStorage.setItem('meals', JSON.stringify(meals));
+        loadMeals(mealDateInput.value); // Reload meals for the current date
     };
 
     const saveMeal = (meal) => {
@@ -102,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const meals = JSON.parse(localStorage.getItem('meals')) || [];
         mealList.innerHTML = ''; // Clear existing meals
         const filteredMeals = meals.filter(meal => meal.timestamp.startsWith(date));
-        filteredMeals.forEach(meal => {
-            addMealToDom(meal);
+        filteredMeals.forEach((meal, index) => {
+            addMealToDom(meal, index);
         });
         updateTotalCalories();
         selectedDateElement.textContent = date;
@@ -118,22 +132,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const foodItems = await fetchFoodInfo(foodQuery);
         const foods = foodItems.map(item => ({
             name: item.name,
-            calories: item.calories,
-            fat_total_g: item.fat_total_g,
-            fat_saturated_g: item.fat_saturated_g,
-            protein_g: item.protein_g,
-            carbohydrates_total_g: item.carbohydrates_total_g,
-            sugar_g: item.sugar_g,
-            fiber_g: item.fiber_g,
-            sodium_mg: item.sodium_mg,
-            potassium_mg: item.potassium_mg,
-            cholesterol_mg: item.cholesterol_mg
+            calories: roundToDecimal(item.calories),
+            fat_total_g: roundToDecimal(item.fat_total_g),
+            fat_saturated_g: roundToDecimal(item.fat_saturated_g),
+            protein_g: roundToDecimal(item.protein_g),
+            carbohydrates_total_g: roundToDecimal(item.carbohydrates_total_g),
+            sugar_g: roundToDecimal(item.sugar_g),
+            fiber_g: roundToDecimal(item.fiber_g),
+            sodium_mg: roundToDecimal(item.sodium_mg),
+            potassium_mg: roundToDecimal(item.potassium_mg),
+            cholesterol_mg: roundToDecimal(item.cholesterol_mg)
         }));
 
         const meal = {
             name: mealName,
             foods: foods,
-            calories: foods.reduce((totalCal, food) => totalCal + food.calories, 0),
+            calories: roundToDecimal(foods.reduce((totalCal, food) => totalCal + food.calories, 0)),
             timestamp: new Date().toISOString()
         };
 
@@ -148,25 +162,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const foodItems = await fetchFoodInfo(foodQuery);
 
         if (foodItems.length > 0) {
-            foodInfoDiv.style.display = 'block';
+            foodInfoDiv.style.display = foodInfoDiv.style.display === 'none' ? 'block' : 'none';
             foodInfoDiv.innerHTML = '';
 
             foodItems.forEach(food => {
                 const foodInfoItem = document.createElement('div');
                 foodInfoItem.innerHTML = `
                     <strong>Food Item:</strong> ${food.name}<br>
-                    <strong>Calories:</strong> ${food.calories} kcal<br>
+                    <strong>Calories:</strong> ${roundToDecimal(food.calories)} kcal<br>
                     <button class="show-more-info">Show More Info</button>
                     <div class="detailed-info" style="display: none;">
-                        <strong>Total Fat:</strong> ${food.fat_total_g} g<br>
-                        <strong>Saturated Fat:</strong> ${food.fat_saturated_g} g<br>
-                        <strong>Protein:</strong> ${food.protein_g} g<br>
-                        <strong>Carbohydrates:</strong> ${food.carbohydrates_total_g} g<br>
-                        <strong>Sugar:</strong> ${food.sugar_g} g<br>
-                        <strong>Fiber:</strong> ${food.fiber_g} g<br>
-                        <strong>Sodium:</strong> ${food.sodium_mg} mg<br>
-                        <strong>Potassium:</strong> ${food.potassium_mg} mg<br>
-                        <strong>Cholesterol:</strong> ${food.cholesterol_mg} mg<br>
+                        <strong>Total Fat:</strong> ${roundToDecimal(food.fat_total_g)} g<br>
+                        <strong>Saturated Fat:</strong> ${roundToDecimal(food.fat_saturated_g)} g<br>
+                        <strong>Protein:</strong> ${roundToDecimal(food.protein_g)} g<br>
+                        <strong>Carbohydrates:</strong> ${roundToDecimal(food.carbohydrates_total_g)} g<br>
+                        <strong>Sugar:</strong> ${roundToDecimal(food.sugar_g)} g<br>
+                        <strong>Fiber:</strong> ${roundToDecimal(food.fiber_g)} g<br>
+                        <strong>Sodium:</strong> ${roundToDecimal(food.sodium_mg)} mg<br>
+                        <strong>Potassium:</strong> ${roundToDecimal(food.potassium_mg)} mg<br>
+                        <strong>Cholesterol:</strong> ${roundToDecimal(food.cholesterol_mg)} mg<br>
                     </div>
                 `;
                 foodInfoDiv.appendChild(foodInfoItem);
@@ -175,13 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const detailedInfoDiv = foodInfoItem.querySelector('.detailed-info');
 
                 showMoreInfoButton.addEventListener('click', () => {
-                    if (detailedInfoDiv.style.display === 'none') {
-                        detailedInfoDiv.style.display = 'block';
-                        showMoreInfoButton.textContent = 'Hide Info';
-                    } else {
-                        detailedInfoDiv.style.display = 'none';
-                        showMoreInfoButton.textContent = 'Show More Info';
-                    }
+                    detailedInfoDiv.style.display = detailedInfoDiv.style.display === 'none' ? 'block' : 'none';
+                    showMoreInfoButton.textContent = detailedInfoDiv.style.display === 'none' ? 'Show More Info' : 'Hide Info';
                 });
             });
         } else {
