@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Tracking Pract</title>
     <link rel="stylesheet" href="MealTracking-pract.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -27,6 +28,11 @@
         <ul id="meal-list"></ul>
         <h2>Total Calories on <span id="selected-date"></span>: <span id="total-calories">0</span></h2>
     </div>
+    <section>
+        <div id="food-chart" style="display: none;">
+            <canvas id="nutrition-chart"></canvas>
+        </div>
+    </section>
     <script src="MealTracking-pract.js"></script>
 </body>
 </html>

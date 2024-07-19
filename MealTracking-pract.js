@@ -9,8 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showInfoButton = document.getElementById('show-info');
     const mealDateInput = document.getElementById('meal-date');
     const selectedDateElement = document.getElementById('selected-date');
+    const foodChartDiv = document.getElementById('food-chart');
+    const nutritionChartCanvas = document.getElementById('nutrition-chart').getContext('2d');
 
-    let currentFoodInfo = {};
+    let chartInstance = null; // To hold the chart instance
 
     const roundToDecimal = (value, decimals = 1) => {
         return Math.round(value * 10 ** decimals) / 10 ** decimals;
@@ -65,8 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const showInfoButton = foodItem.querySelector('.show-info');
                     const foodInfo = foodItem.querySelector('.food-info');
                     showInfoButton.addEventListener('click', () => {
-                        foodInfo.style.display = foodInfo.style.display === 'none' ? 'block' : 'none';
-                        showInfoButton.textContent = foodInfo.style.display === 'none' ? 'Show Info' : 'Hide Info';
+                        if (foodInfo.style.display === 'none') {
+                            foodInfo.style.display = 'block';
+                            showInfoButton.textContent = 'Hide Info';
+                            renderChart(food); // Render chart with food information
+                        } else {
+                            foodInfo.style.display = 'none';
+                            showInfoButton.textContent = 'Show Info';
+                            foodChartDiv.style.display = 'none'; // Hide chart
+                            if (chartInstance) {
+                                chartInstance.destroy(); // Destroy previous chart instance
+                                chartInstance = null;
+                            }
+                        }
                     });
                 });
             } else {
@@ -123,46 +136,75 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDateElement.textContent = date;
     };
 
-    mealForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const mealName = document.getElementById('meal-name').value;
-        const foodQuery = document.getElementById('meal-info').value;
-
-        const foodItems = await fetchFoodInfo(foodQuery);
-        const foods = foodItems.map(item => ({
-            name: item.name,
-            calories: roundToDecimal(item.calories),
-            fat_total_g: roundToDecimal(item.fat_total_g),
-            fat_saturated_g: roundToDecimal(item.fat_saturated_g),
-            protein_g: roundToDecimal(item.protein_g),
-            carbohydrates_total_g: roundToDecimal(item.carbohydrates_total_g),
-            sugar_g: roundToDecimal(item.sugar_g),
-            fiber_g: roundToDecimal(item.fiber_g),
-            sodium_mg: roundToDecimal(item.sodium_mg),
-            potassium_mg: roundToDecimal(item.potassium_mg),
-            cholesterol_mg: roundToDecimal(item.cholesterol_mg)
-        }));
-
-        const meal = {
-            name: mealName,
-            foods: foods,
-            calories: roundToDecimal(foods.reduce((totalCal, food) => totalCal + food.calories, 0)),
-            timestamp: new Date().toISOString()
+    const renderChart = (food) => {
+        foodChartDiv.style.display = 'block';
+        
+        // Clear the previous chart if it exists
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        const data = {
+            labels: ['Total Fat', 'Saturated Fat', 'Protein', 'Carbohydrates', 'Sugar', 'Fiber', 'Sodium', 'Potassium', 'Cholesterol'],
+            datasets: [{
+                label: food.name,
+                data: [
+                    food.fat_total_g,
+                    food.fat_saturated_g,
+                    food.protein_g,
+                    food.carbohydrates_total_g,
+                    food.sugar_g,
+                    food.fiber_g,
+                    food.sodium_mg / 1000, // Convert mg to g for better readability
+                    food.potassium_mg / 1000, // Convert mg to g for better readability
+                    food.cholesterol_mg / 1000 // Convert mg to g for better readability
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(199, 199, 199, 0.2)',
+                    'rgba(0, 255, 0, 0.2)',
+                    'rgba(255, 0, 0, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(0, 255, 0, 1)',
+                    'rgba(255, 0, 0, 1)'
+                ],
+                borderWidth: 1
+            }]
         };
 
-        const index = saveMeal(meal);
-        addMealToDom(meal, index);
-        updateTotalCalories();
-        mealForm.reset();
-    });
+        chartInstance = new Chart(nutritionChartCanvas, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    };
 
     showInfoButton.addEventListener('click', async () => {
         const foodQuery = document.getElementById('meal-info').value;
         const foodItems = await fetchFoodInfo(foodQuery);
 
         if (foodItems.length > 0) {
-            foodInfoDiv.style.display = foodInfoDiv.style.display === 'none' ? 'block' : 'none';
+            foodInfoDiv.style.display = 'block';
             foodInfoDiv.innerHTML = '';
 
             foodItems.forEach(food => {
@@ -189,8 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const detailedInfoDiv = foodInfoItem.querySelector('.detailed-info');
 
                 showMoreInfoButton.addEventListener('click', () => {
-                    detailedInfoDiv.style.display = detailedInfoDiv.style.display === 'none' ? 'block' : 'none';
-                    showMoreInfoButton.textContent = detailedInfoDiv.style.display === 'none' ? 'Show More Info' : 'Hide Info';
+                    if (detailedInfoDiv.style.display === 'none') {
+                        detailedInfoDiv.style.display = 'block';
+                        showMoreInfoButton.textContent = 'Hide Info';
+                        renderChart(food); // Render chart with food information
+                    } else {
+                        detailedInfoDiv.style.display = 'none';
+                        showMoreInfoButton.textContent = 'Show More Info';
+                        foodChartDiv.style.display = 'none'; // Hide chart
+                        if (chartInstance) {
+                            chartInstance.destroy(); // Destroy previous chart instance
+                            chartInstance = null;
+                        }
+                    }
                 });
             });
         } else {
